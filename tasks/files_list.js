@@ -23,18 +23,20 @@ module.exports = function(grunt) {
     // Merge task-specific and/or target-specific options with these defaults.
     var options = this.options({
       jsTemplate: '<script src="<%= pathPrefix %><%= filename %><%= pathSuffix %>"></script>',
-      cssTemplate: '<link rel="stylesheet" type="text/css" href="<%= pathPrefix %><%= filename %><%= pathSuffix %>"></link>',
+      cssTemplate: '<link rel="stylesheet" type="text/css" href="<%= pathPrefix %><%= filename %><%= pathSuffix %>"/>',
+      unknownTemplate: '<link href="<%= pathPrefix %><%= filename %><%= pathSuffix %>"/>',
       pathPrefix: '',
       pathSuffix: '',
       punctuation: '.',
       separator: '\r\n'
     });
 
-    var outputHTML = "";
-    var targetFile = "";
-    var filesCounter = 0;
     // Iterate over all specified file groups.
     this.files.forEach(function(f) {
+      var outputHTML = "";
+      var targetFile = "";
+      var filesCounter = 0;
+    
       // Concat specified files.
       var src = f.src.filter(function(filepath) {
         var fullPath = filepath;
@@ -57,22 +59,24 @@ module.exports = function(grunt) {
           case ".css":
             return _.template(options.cssTemplate, {filename: filepath,pathPrefix: options.pathPrefix, pathSuffix: options.pathSuffix});
           default:
-            filesCounter--;
-            grunt.log.warn('Unrecognized file extension: ' + path.extname(filepath) + '. Must be .js or .css');
-            return "";
+            return _.template(options.unknownTemplate, {filename: filepath, pathPrefix: options.pathPrefix, pathSuffix: options.pathSuffix});
+            //filesCounter--;
+            //grunt.log.warn('Unrecognized file extension: ' + path.extname(filepath) + '. Must be .js or .css');
+            //return "";
         }
       }).join(grunt.util.normalizelf(options.separator));
 
       // src += options.punctuation;
       targetFile = f.dest;
       outputHTML = src;
-    });
-    // Write the destination file.
-    grunt.file.write(targetFile, outputHTML);
+      
+      // Write the destination file.
+      grunt.file.write(targetFile, outputHTML);
 
-    // Print a success message.
-    grunt.log.writeln('Result script/link tags: ' + filesCounter + '.');
-    grunt.log.writeln('File "' + targetFile + '" created.');
+      // Print a success message.
+      grunt.log.writeln('Result script/link tags: ' + filesCounter + '.');
+      grunt.log.writeln('File "' + targetFile + '" created.');  
+    });
 
   });
 
